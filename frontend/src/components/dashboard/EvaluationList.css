@@ -1,0 +1,16 @@
+.evaluation-list {
+    width: 100%;
+}
+
+.rating-stars {
+    white-space: nowrap;
+}
+
+.rating-stars .fa-star {
+    color: #e0e0e0;
+    font-size: 0.9rem;
+}
+
+.rating-stars .fa-star.filled {
+    color: #f39c12;
+}

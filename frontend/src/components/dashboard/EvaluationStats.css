@@ -1,0 +1,30 @@
+.evaluation-stats {
+    padding: 10px;
+}
+
+.chart-container {
+    height: 200px;
+    display: flex;
+    justify-content: center;
+}
+
+.stats-details {
+    margin-top: 20px;
+}
+
+.stat-item {
+    margin-bottom: 15px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
