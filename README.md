@@ -31,6 +31,7 @@ Ce projet est une application web conçue pour gérer et évaluer les stagiaires
    * Utiliser Maven :
 
      ```bash
+     cd backend
      ./mvnw clean install
      ./mvnw spring-boot:run
      ```
