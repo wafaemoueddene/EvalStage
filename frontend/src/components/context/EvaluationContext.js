@@ -30,8 +30,6 @@ export const EvaluationProvider = ({ children }) => {
 const EvaluationForm = () => {
     const [noteEntreprise, setNoteEntreprise] = useState('');
     const [noteScientifique, setNoteScientifique] = useState('');
-    const [noteMetier, setNoteMetier] = useState('');
-    const [noteStage, setNoteStage] = useState('');
     const [generalFeedback, setGeneralFeedback] = useState('');
 
     return (
@@ -68,35 +66,6 @@ const EvaluationForm = () => {
                 />
             </div>
 
-            {/* Note globale compétences métier */}
-            <div className="mb-6">
-                <label className="block text-lg font-medium text-gray-700 mb-2">
-                    Note globale compétences métier
-                </label>
-                <input
-                    type="number"
-                    value={noteMetier}
-                    onChange={(e) => setNoteMetier(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    min="0"
-                    max="20"
-                />
-            </div>
-
-            {/* Note globale du stage */}
-            <div className="mb-6">
-                <label className="block text-lg font-medium text-gray-700 mb-2">
-                    Note globale du stage
-                </label>
-                <input
-                    type="number"
-                    value={noteStage}
-                    onChange={(e) => setNoteStage(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    min="0"
-                    max="20"
-                />
-            </div>
 
             {/* Avis général sur le stagiaire */}
             <div className="mb-6">
