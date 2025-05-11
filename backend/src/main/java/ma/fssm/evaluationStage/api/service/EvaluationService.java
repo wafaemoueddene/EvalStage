@@ -13,6 +13,8 @@ public class EvaluationService {
     @Autowired
     private EvaluationRepository evaluationRepository;
 
+
+
     public List<Evaluation> getAllEvaluations() {
         return evaluationRepository.findAll();
     }

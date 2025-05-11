@@ -1,45 +1,30 @@
 package ma.fssm.evaluationStage.api.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Collection;
-
 @Entity
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Stagiaire extends Personne {
-    @Setter
-    @Getter
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Setter
-    @Getter
     private String institution;
 
-    public Stagiaire(String nom, String email, String prenom, int id) {
-        super(nom, email, prenom);
-        this.id = id;
-    }
+    @ManyToMany(mappedBy = "stagiaires")
+    @JsonBackReference
+    private Collection<Stage> stages;
 
     public Stagiaire(String nom, String email, String prenom, int id, String institution) {
         super(nom, email, prenom);
         this.id = id;
         this.institution = institution;
-    }
-
-    public Stagiaire(int id, String institution) {
-        this.id = id;
-        this.institution = institution;
-    }
-
-    @ManyToMany(mappedBy = "stagiaires")
-    private Collection<Stage> stages;
-
-    public Stagiaire() {
-
     }
 }
