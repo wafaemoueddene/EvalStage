@@ -1,39 +1,26 @@
 package ma.fssm.evaluationStage.api.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Collection;
 
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Evaluation {
-    @Setter
-    @Getter
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Setter
-    @Getter
     private String categorie;
 
-    public Evaluation(int id, String categorie, String valeur_evaluation) {
-        this.id = id;
-        this.categorie = categorie;
-        this.valeur_evaluation = valeur_evaluation;
-    }
-
-    @Setter
-    @Getter
     private String valeur_evaluation;
 
-    @OneToMany(mappedBy = "evaluation")
+    @OneToMany(mappedBy = "evaluation", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Collection<Appreciation> appreciations;
-
-    public Evaluation() {
-
-    }
 }

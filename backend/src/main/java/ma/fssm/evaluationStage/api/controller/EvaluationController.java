@@ -4,8 +4,8 @@ import ma.fssm.evaluationStage.api.entity.Evaluation;
 import ma.fssm.evaluationStage.api.service.EvaluationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+@CrossOrigin(origins = "http://localhost:3000")
 
 @RestController
 @RequestMapping("/evaluations")
@@ -13,6 +13,7 @@ public class EvaluationController {
 
     @Autowired
     private EvaluationService evaluationService;
+
 
     @GetMapping
     public List<Evaluation> getAllEvaluations() {
@@ -38,6 +39,7 @@ public class EvaluationController {
     public Evaluation saveEvaluation(@RequestBody Evaluation evaluation) {
         return evaluationService.saveEvaluation(evaluation);
     }
+
 
     @DeleteMapping("/{id}")
     public void deleteEvaluation(@PathVariable int id) {

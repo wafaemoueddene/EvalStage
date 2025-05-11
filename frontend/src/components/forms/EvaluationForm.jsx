@@ -1,36 +1,32 @@
 import React, { useState } from "react";
+import axios from "axios";
+
 
 export default function EvaluationForm() {
     const [competenceIndividu, setCompetenceIndividu] = useState({
-        "Capacité à prendre des initiatives": "",
-        "Esprit critique - remise en question": "",
-        "Comportement éthique et responsable": "",
-        "Adaptabilité et flexibilité": "",
-        "Gestion du stress et des situations complexes": ""
+        "Etre capable d'analyse et de synthèse ": "",
+        "Etre capable de proposer des méthodes et des axes de travail": "",
+        "Etre capable de faire adhérer les acteurs ": "",
+        "Etre capable de s'autoévaluer": "",
+        "Etre capable d'identifier des problèmes complexes ": ""
     });
     const [competenceEntreprise, setCompetenceEntreprise] = useState({
-        "Intégration à l'équipe et à l'entreprise": "",
-        "Communication et travail collaboratif": "",
-        "Respect des procédures et de la culture": "",
-        "Gestion du temps et des priorités": "",
-        "Contribution à l'amélioration continue": ""
+        "Etre capable d'analyser le fonctionnement de l'entreprise d'acceuil ": "",
+        "Etre capable d'analyser la démarche projet , et d'organiser et de structurer un projet ": "",
+        "Etre capable d'apprendre à déceler et à comprendre la politique environnementale de l'entreprise ": "",
+        "Etre capable de rechercher , de sélectionner l'information  nécessaire à ses activités ": ""
     });
     const [competencesScientifiques, setCompetencesScientifiques] = useState({
-        "Maîtrise des connaissances théoriques": "",
-        "Application des concepts et méthodes": "",
-        "Analyse et résolution de problèmes": "",
-        "Rigueur méthodologique": "",
-        "Veille et auto-formation": ""
+        "Etre capable d'assurer la conception  préliminaire de produits /services/ processus /usages ": "",
     });
-    const [competenceMetier, setCompetenceMetier] = useState({
-        "Compétence métier 1": "",
-        "Compétence métier 2": "",
-        "Compétence métier 3": ""
-    });
+
+
 
     const [avisGeneral, setAvisGeneral] = useState("");
     const [activeTab, setActiveTab] = useState(1);
     const [stagiaire, setStagiaire] = useState("");
+    const [emailTuteur, setEmailTuteur] = useState("");
+    const [emailStagiaire, setEmailStagiaire] = useState("");
     const [entreprise, setEntreprise] = useState("");
     const [tuteur, setTuteur] = useState("");
     const [dateDebut, setDateDebut] = useState("");
@@ -47,10 +43,26 @@ export default function EvaluationForm() {
     const [noteStage, setNoteStage] = useState("");
     const [applicationValue, setApplicationValue] = useState("4");
     const [ouvertureValue, setOuvertureValue] = useState("");
+    const [qualiteValue, setQualiteValue] = useState("");
+    const [competenceMetier, setCompetenceMetier] = useState({});
+    const [nouvelleCompetence, setNouvelleCompetence] = useState("");
+    const [nouveauNiveau, setNouveauNiveau] = useState("");
+
+    // Fonction pour ajouter une compétence
+    const ajouterCompetence = () => {
+        if (nouvelleCompetence.trim() !== '') {
+            setCompetenceMetier({
+                ...competenceMetier,
+                [nouvelleCompetence]: nouveauNiveau
+            });
+            setNouvelleCompetence('');
+            setNouveauNiveau('');
+        }
+    };
 
     // Validation des sections
     const validateAppreciations = () => {
-        return applicationValue && ouvertureValue;
+        return applicationValue && ouvertureValue && qualiteValue;
     };
 
     const validateCompetences = () => {
@@ -64,7 +76,7 @@ export default function EvaluationForm() {
     // Fonction pour avancer entre les onglets
     const handleNextTab = () => {
         if (activeTab === 1) {
-            if (!stagiaire || !entreprise || !tuteur || !dateDebut || !dateFin) {
+            if (!stagiaire || !emailStagiaire || !emailTuteur || !entreprise || !tuteur || !dateDebut || !dateFin) {
                 setError("Veuillez remplir tous les champs avant de continuer.");
                 return;
             }
@@ -96,19 +108,22 @@ export default function EvaluationForm() {
         setActiveTab(prevTab => prevTab + 1);
     };
 
-    // Soumission du formulaire
-    const handleSubmit = () => {
-        alert("Évaluation enregistrée avec succès !");
-        console.log("Formulaire soumis:", {
+
+    const tabTransition = "transition-opacity duration-500";
+    const handleSubmit = async () => {
+        const evaluationData = {
             stagiaire,
+            emailStagiaire,
+            emailTuteur,
             entreprise,
             tuteur,
             dateDebut,
             dateFin,
             themeProjet,
             objectifs,
-            applicationValue,
-            ouvertureValue,
+            application: applicationValue,
+            ouverture: ouvertureValue,
+            qualite: qualiteValue,
             competenceIndividu,
             competenceEntreprise,
             competencesScientifiques,
@@ -120,10 +135,18 @@ export default function EvaluationForm() {
             noteStage,
             commentaire,
             avisGeneral
-        });
+        };
+        console.log("Données du formulaire :", evaluationData);
+        try {
+            const response = await axios.post("http://localhost:9091/evaluations", evaluationData);
+            alert("Évaluation enregistrée avec succès !");
+            // console.log("Réponse du serveur :", response.data);
+        } catch (error) {
+            // console.error("Erreur lors de la soumission :", error);
+            alert("Erreur lors de l'enregistrement de l'évaluation.");
+        }
     };
 
-    const tabTransition = "transition-opacity duration-500";
 
     return (
         <div className="max-w-7xl mx-auto p-6 bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-lg">
@@ -184,17 +207,16 @@ export default function EvaluationForm() {
                                 placeholder="Jean Dupont"
                             />
                         </div>
-
                         <div className="space-y-2 group">
                             <label className="block text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors duration-200">
-                                Entreprise
+                                Email du staigiaire
                             </label>
                             <input
-                                type="text"
-                                value={entreprise}
-                                onChange={(e) => setEntreprise(e.target.value)}
+                                type="email"
+                                value={emailStagiaire}
+                                onChange={(e) => setEmailStagiaire(e.target.value)}
                                 className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
-                                placeholder="Entreprise XYZ"
+                                placeholder="staigiaire@gmail.com"
                             />
                         </div>
 
@@ -208,6 +230,31 @@ export default function EvaluationForm() {
                                 onChange={(e) => setTuteur(e.target.value)}
                                 className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
                                 placeholder="Marie Martin"
+                            />
+                        </div>
+                        <div className="space-y-2 group">
+                            <label className="block text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors duration-200">
+                                Email du tuteur
+                            </label>
+                            <input
+                                type="email"
+                                value={emailTuteur}
+                                onChange={(e) => setEmailTuteur(e.target.value)}
+                                className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                                placeholder="tuteur@gmail.com"
+                            />
+                        </div>
+
+                        <div className="space-y-2 group">
+                            <label className="block text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors duration-200">
+                                Entreprise
+                            </label>
+                            <input
+                                type="text"
+                                value={entreprise}
+                                onChange={(e) => setEntreprise(e.target.value)}
+                                className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                                placeholder="Entreprise XYZ"
                             />
                         </div>
 
@@ -308,7 +355,7 @@ export default function EvaluationForm() {
                                     { label: "Paresseux", value: "1" },
                                     { label: "Le juste nécessaire", value: "2" },
                                     { label: "Bonne", value: "3" },
-                                    { label: "Très forte ✓", value: "4" },
+                                    { label: "Très forte ", value: "4" },
                                     { label: "Dépasse ses objectifs", value: "5" }
                                 ].map((option) => (
                                     <div key={option.value} className="flex items-center">
@@ -335,8 +382,8 @@ export default function EvaluationForm() {
                                 {[
                                     { label: "Isolé(e) ou en opposition", value: "1" },
                                     { label: "Renfermé(e) ou obtus", value: "2" },
-                                    { label: "Agréable", value: "3" },
-                                    { label: "Très agréable", value: "4" },
+                                    { label: "Bonne", value: "3" },
+                                    { label: "Très Bonne", value: "4" },
                                     { label: "Excellente", value: "5" }
                                 ].map((option) => (
                                     <div key={option.value} className="flex items-center">
@@ -353,6 +400,45 @@ export default function EvaluationForm() {
                                 ))}
                             </div>
                         </div>
+                        {/* Appréciation 3 */}
+                        <div className="group">
+                            <label className="block text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors duration-200 mb-3">
+                                3. Qualite de ses "Productions"
+                            </label>
+                            <div className="flex flex-wrap justify-between gap-2">
+                                {[
+                                    { label: "Médiocre", value: "1" },
+                                    { label: "Acceptable", value: "2" },
+                                    { label: "Bonne", value: "3" },
+                                    { label: "Très Bonne", value: "4" },
+                                    { label: "Très professionnelle", value: "5" }
+                                ].map((option) => (
+                                    <div key={option.value} className="flex items-center">
+                                        <input
+                                            type="radio"
+                                            name="qualite"
+                                            value={option.value}
+                                            checked={qualiteValue === option.value}
+                                            onChange={() => setQualiteValue(option.value)}
+                                            className="form-radio text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="ml-2 text-sm text-gray-600">{option.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Avis général sur le stagiaire */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Avis général sur le stagiaire</label>
+                            <textarea
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mt-2"
+                                rows="4"
+                                placeholder="Donnez votre avis général sur le stagiaire et ses performances pendant le stage..."
+                                value={avisGeneral} // Lier au state
+                                onChange={(e) => setAvisGeneral(e.target.value)} // Mettre à jour le state
+                            ></textarea>
+                        </div>
                     </div>
 
                     <div className="mt-6 flex justify-end">
@@ -365,8 +451,6 @@ export default function EvaluationForm() {
                     </div>
                 </div>
             </div>
-
-
 
             {/* Section Compétences */}
             <div className={`${activeTab === 4 ? "block" : "hidden"} ${tabTransition}`}>
@@ -529,7 +613,8 @@ export default function EvaluationForm() {
                         />
                     </div>
 
-                    {/* Compétences métier */}
+                    {/* Compétences Metiers */}
+
                     <h4 className="text-blue-600 font-medium mb-4">Compétences métier</h4>
                     <table className="w-full table-auto border-collapse border border-gray-300 mb-6">
                         <thead>
@@ -539,6 +624,7 @@ export default function EvaluationForm() {
                         </tr>
                         </thead>
                         <tbody>
+                        {/* Afficher les compétences existantes */}
                         {Object.keys(competenceMetier).map((comp, idx) => (
                             <tr key={idx}>
                                 <td className="px-4 py-2 border border-gray-300">{comp}</td>
@@ -552,53 +638,45 @@ export default function EvaluationForm() {
                                             setCompetenceMetier(newCompetences);
                                         }}
                                         className="w-full py-2 px-4 border border-gray-300 rounded-lg"
+                                        placeholder="DEBUTANT, AUTONOME ou AUTONOME+"
                                     />
                                 </td>
                             </tr>
                         ))}
+
+                        {/* Ligne pour la nouvelle compétence */}
+                        <tr>
+                            <td className="px-4 py-2 border border-gray-300">
+                                <input
+                                    type="text"
+                                    value={nouvelleCompetence}
+                                    onChange={(e) => setNouvelleCompetence(e.target.value)}
+                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg"
+                                    placeholder="Saisir une compétence métier..."
+                                />
+                            </td>
+                            <td className="px-4 py-2 border border-gray-300">
+                                <div className="flex space-x-2">
+                                    <input
+                                        type="text"
+                                        value={nouveauNiveau}
+                                        onChange={(e) => setNouveauNiveau(e.target.value)}
+                                        className="w-full py-2 px-4 border border-gray-300 rounded-lg"
+                                        placeholder="DEBUTANT, AUTONOME ou AUTONOME+"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={ajouterCompetence}
+                                        disabled={nouvelleCompetence.trim() === ""}
+                                        className="bg-blue-500 text-white px-4 rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300"
+                                    >
+                                        Ajouter
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
-                    <div className="flex justify-between mb-4">
-                        <span>Note globale compétences métier</span>
-                        <input
-                            type="number"
-                            value={noteMetier}
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                if (value === "" || (Number(value) >= 0 && Number(value) <= 20)) {
-                                    setNoteMetier(value);
-                                }
-                            }}
-                            className="w-20 px-4 py-2 border border-gray-300 rounded-lg text-center"
-                            min="0"
-                            max="20"
-                        />
-                    </div>
-
-
-
-                        {/* Note globale du stage */}
-                        <h4 className="text-blue-600 font-medium mb-4">Note globale du stage</h4>
-                        <input
-                            type="number"
-                            value={noteStage}
-                            onChange={(e) => setNoteStage(e.target.value)}
-                            className="w-20 px-4 py-2 border border-gray-300 rounded-lg text-center mb-6"
-                            min="0"
-                            max="20"
-                        />
-
-                        {/* Avis général sur le stagiaire */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Avis général sur le stagiaire</label>
-                            <textarea
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mt-2"
-                                rows="4"
-                                placeholder="Donnez votre avis général sur le stagiaire et ses performances pendant le stage..."
-                                value={avisGeneral} // Lier au state
-                                onChange={(e) => setAvisGeneral(e.target.value)} // Mettre à jour le state
-                            ></textarea>
-                        </div>
 
                         <div className="text-center mt-6">
                             <button
