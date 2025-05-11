@@ -13,6 +13,5 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Integer>
     @Query("SELECT e FROM Evaluation e WHERE e.valeur_evaluation = :valeur_evaluation")
     List<Evaluation> findByValeurEvaluation(@Param("valeur_evaluation") String valeur_evaluation);
 
-//    List<Evaluation> findByValeur_evaluation(String valeur_evaluation);
 
 }

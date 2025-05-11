@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-
 export default function EvaluationForm() {
     const [competenceIndividu, setCompetenceIndividu] = useState({
         "Etre capable d'analyse et de synthèse ": "",
@@ -20,8 +19,6 @@ export default function EvaluationForm() {
         "Etre capable d'assurer la conception  préliminaire de produits /services/ processus /usages ": "",
     });
 
-
-
     const [avisGeneral, setAvisGeneral] = useState("");
     const [activeTab, setActiveTab] = useState(1);
     const [stagiaire, setStagiaire] = useState("");
@@ -33,20 +30,18 @@ export default function EvaluationForm() {
     const [dateFin, setDateFin] = useState("");
     const [themeProjet, setThemeProjet] = useState("");
     const [objectifs, setObjectifs] = useState("");
-    const [commentaire, setCommentaire] = useState("");
     const [error, setError] = useState("");
     const [errorProjet, setErrorProjet] = useState("");
-    const [noteIndividu, setNoteIndividu] = useState("");
-    const [noteEntreprise, setNoteEntreprise] = useState("");
-    const [noteScientifique, setNoteScientifique] = useState("");
-    const [noteMetier, setNoteMetier] = useState("");
-    const [noteStage, setNoteStage] = useState("");
+    const [noteIndividu, setNoteIndividu] = useState("0");
+    const [noteEntreprise, setNoteEntreprise] = useState("0");
+    const [noteScientifique, setNoteScientifique] = useState("0");
     const [applicationValue, setApplicationValue] = useState("4");
     const [ouvertureValue, setOuvertureValue] = useState("");
     const [qualiteValue, setQualiteValue] = useState("");
     const [competenceMetier, setCompetenceMetier] = useState({});
     const [nouvelleCompetence, setNouvelleCompetence] = useState("");
     const [nouveauNiveau, setNouveauNiveau] = useState("");
+    const [commentaire, setCommentaire] = useState(""); // Ajout du commentaire
 
     // Fonction pour ajouter une compétence
     const ajouterCompetence = () => {
@@ -69,8 +64,7 @@ export default function EvaluationForm() {
         const individualValid = Object.values(competenceIndividu).some(value => value !== "");
         const enterpriseValid = Object.values(competenceEntreprise).some(value => value !== "");
         const scientificValid = Object.values(competencesScientifiques).some(value => value !== "");
-        const metierValid = Object.values(competenceMetier).some(value => value !== "");
-        return individualValid && enterpriseValid && scientificValid && metierValid;
+        return individualValid && enterpriseValid && scientificValid;
     };
 
     // Fonction pour avancer entre les onglets
@@ -108,9 +102,21 @@ export default function EvaluationForm() {
         setActiveTab(prevTab => prevTab + 1);
     };
 
-
     const tabTransition = "transition-opacity duration-500";
+
     const handleSubmit = async () => {
+        // Vérifications avant soumission
+        if (!noteIndividu || !noteEntreprise || !noteScientifique) {
+            alert("Veuillez attribuer une note globale à chaque catégorie de compétences.");
+            return;
+        }
+
+        if (!avisGeneral) {
+            alert("Veuillez donner un avis général sur le stagiaire.");
+            return;
+        }
+
+        // Préparation des données
         const evaluationData = {
             stagiaire,
             emailStagiaire,
@@ -131,22 +137,27 @@ export default function EvaluationForm() {
             noteIndividu,
             noteEntreprise,
             noteScientifique,
-            noteMetier,
-            noteStage,
             commentaire,
             avisGeneral
         };
+
         console.log("Données du formulaire :", evaluationData);
+
         try {
             const response = await axios.post("http://localhost:9091/evaluations", evaluationData);
+            console.log("Réponse du serveur:", response.data);
             alert("Évaluation enregistrée avec succès !");
-            // console.log("Réponse du serveur :", response.data);
+            // Réinitialiser le formulaire ou rediriger l'utilisateur
         } catch (error) {
-            // console.error("Erreur lors de la soumission :", error);
-            alert("Erreur lors de l'enregistrement de l'évaluation.");
+            console.error("Erreur lors de la soumission :", error);
+            if (error.response) {
+                console.error("Détails de l'erreur:", error.response.data);
+                alert(`Erreur lors de l'enregistrement de l'évaluation: ${error.response.data.message || 'Une erreur est survenue'}`);
+            } else {
+                alert("Erreur de connexion au serveur. Veuillez réessayer plus tard.");
+            }
         }
     };
-
 
     return (
         <div className="max-w-7xl mx-auto p-6 bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-lg">

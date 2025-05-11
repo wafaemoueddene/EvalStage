@@ -1,5 +1,6 @@
 package ma.fssm.evaluationStage.api.controller;
 
+import ma.fssm.evaluationStage.api.dto.EvaluationDTO;
 import ma.fssm.evaluationStage.api.entity.Evaluation;
 import ma.fssm.evaluationStage.api.service.EvaluationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,11 @@ public class EvaluationController {
     }
 
     @PostMapping
-    public Evaluation saveEvaluation(@RequestBody Evaluation evaluation) {
+    public Evaluation saveEvaluation(@RequestBody EvaluationDTO evaluationDTO) {
+        // Mapper les données du DTO vers les entités
+        Evaluation evaluation = evaluationService.mapDTOToEvaluation(evaluationDTO);
+
+        // Sauvegarder l'évaluation et ses relations
         return evaluationService.saveEvaluation(evaluation);
     }
 
