@@ -30,8 +30,8 @@ public class EvaluationDTO {
     private String noteIndividu;
     private String noteEntreprise;
     private String noteScientifique;
-    private String commentaire;
-    private String avisGeneral;
+    private String noteMetier;
+    private String nouveauNiveau ;
 
 
 }
