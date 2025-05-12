@@ -10,7 +10,7 @@ import java.util.List;
 public interface EvaluationRepository extends JpaRepository<Evaluation, Integer> {
     List<Evaluation> findByCategorie(String categorie);
 
-    @Query("SELECT e FROM Evaluation e WHERE e.valeur_evaluation = :valeur_evaluation")
+    @Query("SELECT e FROM Evaluation e WHERE e.valeur_evaluation LIKE %:valeur%")
     List<Evaluation> findByValeurEvaluation(@Param("valeur_evaluation") String valeur_evaluation);
 
 

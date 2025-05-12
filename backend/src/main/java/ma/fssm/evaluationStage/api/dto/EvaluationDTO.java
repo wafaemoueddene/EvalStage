@@ -10,6 +10,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EvaluationDTO {
+    private String getOuvertureValue;
     private String stagiaire;
     private String emailStagiaire;
     private String emailTuteur;
@@ -29,6 +30,8 @@ public class EvaluationDTO {
     private String noteIndividu;
     private String noteEntreprise;
     private String noteScientifique;
+    private String commentaire;
     private String avisGeneral;
+
 
 }

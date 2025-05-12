@@ -2,13 +2,7 @@ package ma.fssm.evaluationStage.api.service;
 
 import ma.fssm.evaluationStage.api.dto.EvaluationDTO;
 import ma.fssm.evaluationStage.api.entity.*;
-import ma.fssm.evaluationStage.api.repository.EvaluationRepository;
-import ma.fssm.evaluationStage.api.repository.StagiaireRepository;
-import ma.fssm.evaluationStage.api.repository.TuteurRepository;
-import ma.fssm.evaluationStage.api.repository.CategorieRepository;
-import ma.fssm.evaluationStage.api.repository.CompetencesRepository;
-import ma.fssm.evaluationStage.api.repository.StageRepository;
-import ma.fssm.evaluationStage.api.repository.PeriodeRepository;
+import ma.fssm.evaluationStage.api.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +35,9 @@ public class EvaluationService {
     @Autowired
     private PeriodeRepository periodeRepository;
 
+    @Autowired
+    private AppreciationRepository appreciationRepository;
+
     public List<Evaluation> getAllEvaluations() {
         return evaluationRepository.findAll();
     }
@@ -67,34 +64,122 @@ public class EvaluationService {
     }
 
     @Transactional
-    public Evaluation mapDTOToEvaluation(EvaluationDTO dto) {
-        // Création de l'évaluation
-        Evaluation evaluation = new Evaluation();
-        evaluation.setCategorie(dto.getThemeProjet());
-        evaluation.setValeur_evaluation(dto.getAvisGeneral());
+    public void saveCompetenceCategories(Map<String, String> competences, String categorieType) {
+        if (competences == null || competences.isEmpty()) {
+            return;
+        }
 
-        // Préparation de la liste des appréciations
-        List<Appreciation> appreciations = new ArrayList<>();
-        evaluation.setAppreciations(appreciations);
+        for (Map.Entry<String, String> entry : competences.entrySet()) {
+            Categorie categorie = new Categorie();
+            categorie.setIntitule_categorie(entry.getKey());
+            categorie.setValeur_categorie(entry.getValue());
+            categorieRepository.save(categorie);
+        }
+    }
 
-        // Traiter le stagiaire
+    @Transactional
+    public List<Evaluation> mapDTOToEvaluation(EvaluationDTO dto) {
+        List<Evaluation> evaluations = new ArrayList<>();
+
+        // 1. Récupérer ou créer le stagiaire
         Stagiaire stagiaire = getOrCreateStagiaire(dto);
 
-        // Traiter le tuteur
+        // 2. Récupérer ou créer le tuteur
         Tuteur tuteur = getOrCreateTuteur(dto);
 
-        // Créer la période
+        // 3. Créer la période de stage
         Periode periode = createPeriode(dto, tuteur);
 
-        // Créer le stage
+        // 4. Créer le stage
         Stage stage = createStage(dto, stagiaire, periode);
 
-        // Traiter les compétences par catégorie
-        processCompetences(dto, evaluation, "INDIVIDU", dto.getCompetenceIndividu(), periode, Float.parseFloat(dto.getNoteIndividu()));
-        processCompetences(dto, evaluation, "ENTREPRISE", dto.getCompetenceEntreprise(), periode, Float.parseFloat(dto.getNoteEntreprise()));
-        processCompetences(dto, evaluation, "SCIENTIFIQUE", dto.getCompetencesScientifiques(), periode, Float.parseFloat(dto.getNoteScientifique()));
+        // Liste pour stocker toutes les compétences créées
+        List<Competences> allCompetences = new ArrayList<>();
 
-        return evaluation;
+        // Créer une évaluation pour "Application dans ses activités"
+        Evaluation evalApplication = null;
+        if (dto.getApplication() != null && !dto.getApplication().isEmpty()) {
+            evalApplication = new Evaluation();
+            evalApplication.setCategorie("Application dans ses activités");
+            evalApplication.setValeur_evaluation(mapApplicationValue(dto.getApplication()));
+            evalApplication.setAppreciations(new ArrayList<>());
+            evalApplication = saveEvaluation(evalApplication);
+            evaluations.add(evalApplication);
+        }
+
+        // Créer une évaluation pour "Ouverture aux autres"
+        Evaluation evalOuverture = null;
+        if (dto.getOuverture() != null && !dto.getOuverture().isEmpty()) {
+            evalOuverture = new Evaluation();
+            evalOuverture.setCategorie("Ouverture aux autres");
+            evalOuverture.setValeur_evaluation(mapOuvertureValue(dto.getOuverture()));
+            evalOuverture.setAppreciations(new ArrayList<>());
+            evalOuverture = saveEvaluation(evalOuverture);
+            evaluations.add(evalOuverture);
+        }
+
+        // Créer une évaluation pour "Qualité de ses Productions"
+        Evaluation evalQualite = null;
+        if (dto.getQualite() != null && !dto.getQualite().isEmpty()) {
+            evalQualite = new Evaluation();
+            evalQualite.setCategorie("Qualité de ses \"Productions\"");
+            evalQualite.setValeur_evaluation(mapQualiteValue(dto.getQualite()));
+            evalQualite.setAppreciations(new ArrayList<>());
+            evalQualite = saveEvaluation(evalQualite);
+            evaluations.add(evalQualite);
+        }
+
+        // Traiter les compétences par catégorie
+        Competences competenceIndividu = null;
+        if (dto.getCompetenceIndividu() != null && !dto.getCompetenceIndividu().isEmpty()) {
+            competenceIndividu = new Competences();
+            competenceIndividu.setIntitule_competence("Compétences liées à l'individu");
+            competenceIndividu.setNote(Float.parseFloat(dto.getNoteIndividu()));
+
+            // Sauvegarder la compétence principale avec sa note
+            competenceIndividu = competencesRepository.save(competenceIndividu);
+            allCompetences.add(competenceIndividu);
+
+            // Traiter les compétences détaillées et les catégories
+            processDetailedCompetences(competenceIndividu, dto.getCompetenceIndividu());
+        }
+
+        Competences competenceEntreprise = null;
+        if (dto.getCompetenceEntreprise() != null && !dto.getCompetenceEntreprise().isEmpty()) {
+            competenceEntreprise = new Competences();
+            competenceEntreprise.setIntitule_competence("Compétences liées à l'entreprise");
+            competenceEntreprise.setNote(Float.parseFloat(dto.getNoteEntreprise()));
+
+            // Sauvegarder la compétence principale avec sa note
+            competenceEntreprise = competencesRepository.save(competenceEntreprise);
+            allCompetences.add(competenceEntreprise);
+
+            // Traiter les compétences détaillées et les catégories
+            processDetailedCompetences(competenceEntreprise, dto.getCompetenceEntreprise());
+        }
+
+        Competences competenceScientifique = null;
+        if (dto.getCompetencesScientifiques() != null && !dto.getCompetencesScientifiques().isEmpty()) {
+            competenceScientifique = new Competences();
+            competenceScientifique.setIntitule_competence("Compétences scientifiques");
+            competenceScientifique.setNote(Float.parseFloat(dto.getNoteScientifique()));
+
+            // Sauvegarder la compétence principale avec sa note
+            competenceScientifique = competencesRepository.save(competenceScientifique);
+            allCompetences.add(competenceScientifique);
+
+            // Traiter les compétences détaillées et les catégories
+            processDetailedCompetences(competenceScientifique, dto.getCompetencesScientifiques());
+        }
+
+        // Créer les appréciations qui lient les évaluations, compétences et périodes
+        for (Evaluation evaluation : evaluations) {
+            for (Competences competence : allCompetences) {
+                createAppreciation(competence, evaluation, periode);
+            }
+        }
+
+        return evaluations;
     }
 
     private Stagiaire getOrCreateStagiaire(EvaluationDTO dto) {
@@ -111,7 +196,7 @@ public class EvaluationService {
 
             Stagiaire stagiaire = new Stagiaire();
             stagiaire.setNom(nom);
-            stagiaire.setPrenom(prenom);  // Cette ligne manquait
+            stagiaire.setPrenom(prenom);
             stagiaire.setEmail(dto.getEmailStagiaire());
             stagiaire.setInstitution("FSSM");
 
@@ -157,6 +242,9 @@ public class EvaluationService {
         tuteurs.add(tuteur);
         periode.setTuteur(tuteurs);
 
+        // Initialiser la collection des appréciations
+        periode.setAppreciations(new ArrayList<>());
+
         return periodeRepository.save(periode);
     }
 
@@ -179,45 +267,93 @@ public class EvaluationService {
         return stageRepository.save(stage);
     }
 
-    private void processCompetences(EvaluationDTO dto, Evaluation evaluation, String categorieType,
-                                    Map<String, String> competencesMap, Periode periode, Float noteGlobale) {
+    @Transactional
+    public void processDetailedCompetences(Competences mainCompetence, Map<String, String> competencesMap) {
+        // Pour chaque entrée de compétence
+        for (Map.Entry<String, String> entry : competencesMap.entrySet()) {
+            String valeurCategorie = entry.getValue().isEmpty() ? "NA" : entry.getValue();
 
-        if (competencesMap == null || competencesMap.isEmpty()) {
-            return;
+            // Créer une nouvelle catégorie
+            Categorie categorie = new Categorie();
+            categorie.setIntitule_categorie(entry.getKey());
+            categorie.setValeur_categorie(valeurCategorie);
+
+            // Établir la relation entre la catégorie et la compétence (sans référence circulaire)
+            categorie.setCompetence(mainCompetence);
+
+            // Sauvegarder la catégorie
+            categorieRepository.save(categorie);
+
+            // Ajouter la catégorie à la liste des catégories de la compétence
+            if (mainCompetence.getCategories() == null) {
+                mainCompetence.setCategories(new ArrayList<>());
+            }
+            mainCompetence.getCategories().add(categorie);
         }
 
+        // Sauvegarder à nouveau la compétence principale après avoir ajouté toutes les catégories
+        competencesRepository.save(mainCompetence);
+    }
 
-        // Traiter chaque compétence
-        for (Map.Entry<String, String> entry : competencesMap.entrySet()) {
-            String intituleCompetence = entry.getKey();
-            String valeurCompetence = entry.getValue();
-
-            // Sauter les compétences sans valeur
-            if (valeurCompetence == null || valeurCompetence.isEmpty()) {
-                continue;
-            }
-
-
-            // Créer la compétence
-            Competences competence = new Competences();
-            competence.setIntitule_competence(intituleCompetence);
-            competence = competencesRepository.save(competence);
-
-            // Créer l'appréciation
-            Appreciation appreciation = new Appreciation();
-            appreciation.setEvaluation(evaluation);
-            appreciation.setCompetences(competence);
-
-            // Associer à la période
-            List<Periode> periodes = new ArrayList<>();
-            periodes.add(periode);
-            appreciation.setPeriodes(periodes);
-
-            // Ajouter à la liste des appréciations de l'évaluation
-            evaluation.getAppreciations().add(appreciation);
+    // Méthodes de mappage des valeurs numériques aux textes qualitatifs
+    private String mapApplicationValue(String value) {
+        switch(value) {
+            case "1": return "Paresseux";
+            case "2": return "Le juste nécessaire";
+            case "3": return "Bonne";
+            case "4": return "Très forte";
+            case "5": return "Dépasse ses objectifs";
+            default: return value; // Retourne la valeur d'origine en cas de non-correspondance
         }
     }
 
+    private String mapOuvertureValue(String value) {
+        switch(value) {
+            case "1": return "Isolé(e) ou en opposition";
+            case "2": return "Renfermé(e) ou obtus";
+            case "3": return "Bonne";
+            case "4": return "Très Bonne";
+            case "5": return "Excellente";
+            default: return value;
+        }
+    }
 
+    private String mapQualiteValue(String value) {
+        switch(value) {
+            case "1": return "Médiocre";
+            case "2": return "Acceptable";
+            case "3": return "Bonne";
+            case "4": return "Très Bonne";
+            case "5": return "Très professionnelle";
+            default: return value;
+        }
+    }
 
+    @Transactional
+    public void createAppreciation(Competences competence, Evaluation evaluation, Periode periode) {
+        if (competence != null && evaluation != null && periode != null) {
+            // Créer une nouvelle appréciation
+            Appreciation appreciation = new Appreciation();
+            appreciation.setCompetences(competence);
+            appreciation.setEvaluation(evaluation);
+
+            // Sauvegarder l'appréciation
+            appreciation = appreciationRepository.save(appreciation);
+
+            // Mettre à jour les relations
+            // 1. Ajouter l'appréciation à l'évaluation
+            if (evaluation.getAppreciations() == null) {
+                evaluation.setAppreciations(new ArrayList<>());
+            }
+            evaluation.getAppreciations().add(appreciation);
+            evaluationRepository.save(evaluation);
+
+            // 2. Ajouter l'appréciation à la période
+            if (periode.getAppreciations() == null) {
+                periode.setAppreciations(new ArrayList<>());
+            }
+            periode.getAppreciations().add(appreciation);
+            periodeRepository.save(periode);
+        }
+    }
 }

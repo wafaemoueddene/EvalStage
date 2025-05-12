@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -24,21 +26,35 @@ public class Competences {
     @Getter
     private Float note;
 
-
     public Competences(String intitule_competence, int id, Float note) {
         this.intitule_competence = intitule_competence;
         this.id = id;
         this.note = note;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "categorie_id")
-    private Categorie categorie;
-
     @OneToMany(mappedBy = "competences")
     private Collection<Appreciation> appreciations;
 
+    // Relation One-to-Many avec Categorie
+    @OneToMany(mappedBy = "competence", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Categorie> categories = new ArrayList<>();
+
     public Competences() {
-        
     }
+
+    // Supprimé la référence circulaire
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "categorie_id")
+    // private Categorie categorie;
+
+    // Méthode pour ajouter une catégorie en établissant la relation bidirectionnelle
+    public void addCategorie(Categorie categorie) {
+        if (this.categories == null) {
+            this.categories = new ArrayList<>();
+        }
+        this.categories.add(categorie);
+        categorie.setCompetence(this);
+    }
+
+
 }
