@@ -28,4 +28,12 @@ public class CompetencesService {
     public void deleteCompetence(int id) {
         competencesRepository.deleteById(id);
     }
+
+    public List<Competences> findByCategorieIntitule(String intitule) {
+        return competencesRepository.findByCategorieIntitule(intitule);
+    }
+
+    public List<Competences> findByNoteGreaterThan(Float note) {
+        return competencesRepository.findByNoteGreaterThan(note);
+    }
 }

@@ -104,6 +104,50 @@ export default function EvaluationForm() {
 
     const tabTransition = "transition-opacity duration-500";
 
+    const resetForm = () => {
+        // Réinitialiser tous les states du formulaire
+        setCompetenceIndividu({
+            "Etre capable d'analyse et de synthèse ": "",
+            "Etre capable de proposer des méthodes et des axes de travail": "",
+            "Etre capable de faire adhérer les acteurs ": "",
+            "Etre capable de s'autoévaluer": "",
+            "Etre capable d'identifier des problèmes complexes ": ""
+        });
+        setCompetenceEntreprise({
+            "Etre capable d'analyser le fonctionnement de l'entreprise d'acceuil ": "",
+            "Etre capable d'analyser la démarche projet , et d'organiser et de structurer un projet ": "",
+            "Etre capable d'apprendre à déceler et à comprendre la politique environnementale de l'entreprise ": "",
+            "Etre capable de rechercher , de sélectionner l'information  nécessaire à ses activités ": ""
+        });
+        setCompetencesScientifiques({
+            "Etre capable d'assurer la conception  préliminaire de produits /services/ processus /usages ": "",
+        });
+
+        // Réinitialiser les autres states
+        setStagiaire("");
+        setEmailStagiaire("");
+        setEmailTuteur("");
+        setEntreprise("");
+        setTuteur("");
+        setDateDebut("");
+        setDateFin("");
+        setThemeProjet("");
+        setObjectifs("");
+        setApplicationValue("4");
+        setOuvertureValue("");
+        setQualiteValue("");
+        setCompetenceMetier({});
+        setNoteIndividu("0");
+        setNoteEntreprise("0");
+        setNoteScientifique("0");
+        setCommentaire("");
+        setAvisGeneral("");
+
+        // Revenir au premier onglet
+        setActiveTab(1);
+    };
+
+
     const handleSubmit = async () => {
         // Vérifications avant soumission
         if (!noteIndividu || !noteEntreprise || !noteScientifique) {
@@ -115,6 +159,19 @@ export default function EvaluationForm() {
             alert("Veuillez donner un avis général sur le stagiaire.");
             return;
         }
+
+        // Filtrer les compétences avec des valeurs
+        const filteredCompetenceIndividu = Object.fromEntries(
+            Object.entries(competenceIndividu).filter(([_, value]) => value !== "")
+        );
+
+        const filteredCompetenceEntreprise = Object.fromEntries(
+            Object.entries(competenceEntreprise).filter(([_, value]) => value !== "")
+        );
+
+        const filteredCompetencesScientifiques = Object.fromEntries(
+            Object.entries(competencesScientifiques).filter(([_, value]) => value !== "")
+        );
 
         // Préparation des données
         const evaluationData = {
@@ -130,9 +187,9 @@ export default function EvaluationForm() {
             application: applicationValue,
             ouverture: ouvertureValue,
             qualite: qualiteValue,
-            competenceIndividu,
-            competenceEntreprise,
-            competencesScientifiques,
+            competenceIndividu: filteredCompetenceIndividu,
+            competenceEntreprise: filteredCompetenceEntreprise,
+            competencesScientifiques: filteredCompetencesScientifiques,
             competenceMetier,
             noteIndividu,
             noteEntreprise,
@@ -148,6 +205,7 @@ export default function EvaluationForm() {
             console.log("Réponse du serveur:", response.data);
             alert("Évaluation enregistrée avec succès !");
             // Réinitialiser le formulaire ou rediriger l'utilisateur
+            resetForm();
         } catch (error) {
             console.error("Erreur lors de la soumission :", error);
             if (error.response) {

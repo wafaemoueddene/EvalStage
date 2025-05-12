@@ -37,12 +37,12 @@ public class EvaluationController {
     }
 
     @PostMapping
-    public Evaluation saveEvaluation(@RequestBody EvaluationDTO evaluationDTO) {
+    public List<Evaluation> saveEvaluation(@RequestBody EvaluationDTO evaluationDTO) {
         // Mapper les données du DTO vers les entités
-        Evaluation evaluation = evaluationService.mapDTOToEvaluation(evaluationDTO);
+        List<Evaluation> evaluations = evaluationService.mapDTOToEvaluation(evaluationDTO);
 
-        // Sauvegarder l'évaluation et ses relations
-        return evaluationService.saveEvaluation(evaluation);
+        // Renvoyer les évaluations sauvegardées
+        return evaluations;
     }
 
 

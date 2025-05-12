@@ -9,11 +9,10 @@ import java.util.List;
 
 public interface CompetencesRepository extends JpaRepository<Competences, Integer> {
 
-    @Query("SELECT c FROM Competences c WHERE c.categorie.intitule_categorie = :intitule_categorie")
+    // Requête modifiée pour chercher les compétences par l'intitulé d'une catégorie associée
+    @Query("SELECT c FROM Competences c JOIN c.categories cat WHERE cat.intitule_categorie = :intitule_categorie")
     List<Competences> findByCategorieIntitule(@Param("intitule_categorie") String intitule);
+
     @Query("SELECT c FROM Competences c WHERE c.note > :note")
     List<Competences> findByNoteGreaterThan(@Param("note") Float note);
-//    List<Competences> findByIntituleCompetenceCategorie(String categorie);
-//    List<Competences> findByNoteGreaterThan(Float note);
-
 }
