@@ -130,47 +130,35 @@ public class EvaluationService {
         }
 
         // Traiter les compétences par catégorie
-        Competences competenceIndividu = null;
-        if (dto.getCompetenceIndividu() != null && !dto.getCompetenceIndividu().isEmpty()) {
-            competenceIndividu = new Competences();
-            competenceIndividu.setIntitule_competence("Compétences liées à l'individu");
-            competenceIndividu.setNote(Float.parseFloat(dto.getNoteIndividu()));
+        Competences competenceIndividu = processCompetenceCategory(
+                "Compétences liées à l'individu",
+                dto.getCompetenceIndividu(),
+                dto.getNoteIndividu(),
+                allCompetences
+        );
 
-            // Sauvegarder la compétence principale avec sa note
-            competenceIndividu = competencesRepository.save(competenceIndividu);
-            allCompetences.add(competenceIndividu);
+        Competences competenceEntreprise = processCompetenceCategory(
+                "Compétences liées à l'entreprise",
+                dto.getCompetenceEntreprise(),
+                dto.getNoteEntreprise(),
+                allCompetences
+        );
 
-            // Traiter les compétences détaillées et les catégories
-            processDetailedCompetences(competenceIndividu, dto.getCompetenceIndividu());
-        }
+        Competences competenceScientifique = processCompetenceCategory(
+                "Compétences scientifiques",
+                dto.getCompetencesScientifiques(),
+                dto.getNoteScientifique(),
+                allCompetences
+        );
 
-        Competences competenceEntreprise = null;
-        if (dto.getCompetenceEntreprise() != null && !dto.getCompetenceEntreprise().isEmpty()) {
-            competenceEntreprise = new Competences();
-            competenceEntreprise.setIntitule_competence("Compétences liées à l'entreprise");
-            competenceEntreprise.setNote(Float.parseFloat(dto.getNoteEntreprise()));
-
-            // Sauvegarder la compétence principale avec sa note
-            competenceEntreprise = competencesRepository.save(competenceEntreprise);
-            allCompetences.add(competenceEntreprise);
-
-            // Traiter les compétences détaillées et les catégories
-            processDetailedCompetences(competenceEntreprise, dto.getCompetenceEntreprise());
-        }
-
-        Competences competenceScientifique = null;
-        if (dto.getCompetencesScientifiques() != null && !dto.getCompetencesScientifiques().isEmpty()) {
-            competenceScientifique = new Competences();
-            competenceScientifique.setIntitule_competence("Compétences scientifiques");
-            competenceScientifique.setNote(Float.parseFloat(dto.getNoteScientifique()));
-
-            // Sauvegarder la compétence principale avec sa note
-            competenceScientifique = competencesRepository.save(competenceScientifique);
-            allCompetences.add(competenceScientifique);
-
-            // Traiter les compétences détaillées et les catégories
-            processDetailedCompetences(competenceScientifique, dto.getCompetencesScientifiques());
-        }
+        // Traitement des compétences métier de manière similaire aux autres compétences
+        // Même si la map est vide, on crée l'objet pour la note qui est obligatoire
+        Competences competenceMetier = processCompetenceCategory(
+                "Compétences métier",
+                dto.getCompetenceMetier(),
+                dto.getNoteMetier(),
+                allCompetences
+        );
 
         // Créer les appréciations qui lient les évaluations, compétences et périodes
         for (Evaluation evaluation : evaluations) {
@@ -180,6 +168,39 @@ public class EvaluationService {
         }
 
         return evaluations;
+    }
+
+    /**
+     * Méthode générique pour traiter une catégorie de compétence
+     */
+    @Transactional
+    public Competences processCompetenceCategory(String intitule, Map<String, String> competencesMap,
+                                                  String noteStr, List<Competences> allCompetences) {
+        Competences competence = new Competences();
+        competence.setIntitule_competence(intitule);
+
+        // Prendre en charge les cas où la note pourrait être null ou vide
+        float note = 0F;
+        if (noteStr != null && !noteStr.isEmpty()) {
+            try {
+                note = Float.parseFloat(noteStr);
+            } catch (NumberFormatException e) {
+                // Log de l'erreur ou gestion spécifique
+            }
+        }
+        competence.setNote(note);
+
+
+        // Sauvegarder la compétence principale avec sa note
+        competence = competencesRepository.save(competence);
+        allCompetences.add(competence);
+
+        // Traiter les compétences détaillées et les catégories si elles existent
+        if (competencesMap != null && !competencesMap.isEmpty()) {
+            processDetailedCompetences(competence, competencesMap);
+        }
+
+        return competence;
     }
 
     private Stagiaire getOrCreateStagiaire(EvaluationDTO dto) {

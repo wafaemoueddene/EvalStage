@@ -35,23 +35,27 @@ export default function EvaluationForm() {
     const [noteIndividu, setNoteIndividu] = useState("0");
     const [noteEntreprise, setNoteEntreprise] = useState("0");
     const [noteScientifique, setNoteScientifique] = useState("0");
+    const [noteMetier, setNoteMetier] = useState("0");
     const [applicationValue, setApplicationValue] = useState("4");
     const [ouvertureValue, setOuvertureValue] = useState("");
     const [qualiteValue, setQualiteValue] = useState("");
     const [competenceMetier, setCompetenceMetier] = useState({});
     const [nouvelleCompetence, setNouvelleCompetence] = useState("");
     const [nouveauNiveau, setNouveauNiveau] = useState("");
-    const [commentaire, setCommentaire] = useState(""); // Ajout du commentaire
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-    // Fonction pour ajouter une compétence
+
     const ajouterCompetence = () => {
         if (nouvelleCompetence.trim() !== '') {
+            // Si nouveauNiveau est vide, utilisez "NA" par défaut
+            const niveau = nouveauNiveau || "NA";
+
             setCompetenceMetier({
                 ...competenceMetier,
-                [nouvelleCompetence]: nouveauNiveau
+                [nouvelleCompetence]: niveau
             });
             setNouvelleCompetence('');
-            setNouveauNiveau('');
+            setNouveauNiveau(''); // Réinitialiser le niveau
         }
     };
 
@@ -64,7 +68,8 @@ export default function EvaluationForm() {
         const individualValid = Object.values(competenceIndividu).some(value => value !== "");
         const enterpriseValid = Object.values(competenceEntreprise).some(value => value !== "");
         const scientificValid = Object.values(competencesScientifiques).some(value => value !== "");
-        return individualValid && enterpriseValid && scientificValid;
+        const metierNoteValid = noteMetier !== "";
+        return individualValid && enterpriseValid && scientificValid && metierNoteValid;
     };
 
     // Fonction pour avancer entre les onglets
@@ -94,7 +99,7 @@ export default function EvaluationForm() {
 
         if (activeTab === 4) {
             if (!validateCompetences()) {
-                alert("Veuillez remplir au moins une compétence dans chaque catégorie.");
+                alert("Veuillez remplir au moins une catégorie dans chaque compétence.");
                 return;
             }
         }
@@ -140,18 +145,22 @@ export default function EvaluationForm() {
         setNoteIndividu("0");
         setNoteEntreprise("0");
         setNoteScientifique("0");
-        setCommentaire("");
         setAvisGeneral("");
 
         // Revenir au premier onglet
         setActiveTab(1);
     };
 
+    // Fermer la boîte de dialogue
+    const closeSuccessModal = () => {
+        setShowSuccessModal(false);
+    };
+
 
     const handleSubmit = async () => {
         // Vérifications avant soumission
-        if (!noteIndividu || !noteEntreprise || !noteScientifique) {
-            alert("Veuillez attribuer une note globale à chaque catégorie de compétences.");
+        if (!noteIndividu || !noteEntreprise || !noteScientifique || !noteMetier) {
+            alert("Veuillez attribuer une note globale à chaque compétences.");
             return;
         }
 
@@ -172,6 +181,8 @@ export default function EvaluationForm() {
         const filteredCompetencesScientifiques = Object.fromEntries(
             Object.entries(competencesScientifiques).filter(([_, value]) => value !== "")
         );
+
+
 
         // Préparation des données
         const evaluationData = {
@@ -194,7 +205,7 @@ export default function EvaluationForm() {
             noteIndividu,
             noteEntreprise,
             noteScientifique,
-            commentaire,
+            noteMetier,
             avisGeneral
         };
 
@@ -203,9 +214,11 @@ export default function EvaluationForm() {
         try {
             const response = await axios.post("http://localhost:9091/evaluations", evaluationData);
             console.log("Réponse du serveur:", response.data);
-            alert("Évaluation enregistrée avec succès !");
+            setShowSuccessModal(true);
+
             // Réinitialiser le formulaire ou rediriger l'utilisateur
             resetForm();
+
         } catch (error) {
             console.error("Erreur lors de la soumission :", error);
             if (error.response) {
@@ -682,14 +695,16 @@ export default function EvaluationForm() {
                         />
                     </div>
 
-                    {/* Compétences Metiers */}
-
+                    {/* Compétences Métiers */}
                     <h4 className="text-blue-600 font-medium mb-4">Compétences métier</h4>
                     <table className="w-full table-auto border-collapse border border-gray-300 mb-6">
                         <thead>
                         <tr className="bg-blue-100">
                             <th className="px-4 py-2 text-left border border-gray-300">Compétence</th>
-                            <th className="px-4 py-2 text-center border border-gray-300">Niveau</th>
+                            <th className="px-4 py-2 text-center border border-gray-300">NA</th>
+                            <th className="px-4 py-2 text-center border border-gray-300">Débutant</th>
+                            <th className="px-4 py-2 text-center border border-gray-300">Autonome</th>
+                            <th className="px-4 py-2 text-center border border-gray-300">Autonome +</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -697,19 +712,22 @@ export default function EvaluationForm() {
                         {Object.keys(competenceMetier).map((comp, idx) => (
                             <tr key={idx}>
                                 <td className="px-4 py-2 border border-gray-300">{comp}</td>
-                                <td className="px-4 py-2 border border-gray-300">
-                                    <input
-                                        type="text"
-                                        value={competenceMetier[comp]}
-                                        onChange={(e) => {
-                                            const newCompetences = { ...competenceMetier };
-                                            newCompetences[comp] = e.target.value;
-                                            setCompetenceMetier(newCompetences);
-                                        }}
-                                        className="w-full py-2 px-4 border border-gray-300 rounded-lg"
-                                        placeholder="DEBUTANT, AUTONOME ou AUTONOME+"
-                                    />
-                                </td>
+                                {["NA", "Débutant", "Autonome", "Autonome+"].map((level) => (
+                                    <td key={level} className="px-4 py-2 border border-gray-300 text-center">
+                                        <input
+                                            type="radio"
+                                            name={`competenceMetier${idx}`}
+                                            value={level}
+                                            checked={competenceMetier[comp] === level}
+                                            onChange={() => {
+                                                const newCompetences = { ...competenceMetier };
+                                                newCompetences[comp] = level;
+                                                setCompetenceMetier(newCompetences);
+                                            }}
+                                            className="form-radio"
+                                        />
+                                    </td>
+                                ))}
                             </tr>
                         ))}
 
@@ -724,28 +742,50 @@ export default function EvaluationForm() {
                                     placeholder="Saisir une compétence métier..."
                                 />
                             </td>
-                            <td className="px-4 py-2 border border-gray-300">
-                                <div className="flex space-x-2">
+                            {["NA", "Débutant", "Autonome", "Autonome+"].map((level) => (
+                                <td key={level} className="px-4 py-2 border border-gray-300 text-center">
                                     <input
-                                        type="text"
-                                        value={nouveauNiveau}
-                                        onChange={(e) => setNouveauNiveau(e.target.value)}
-                                        className="w-full py-2 px-4 border border-gray-300 rounded-lg"
-                                        placeholder="DEBUTANT, AUTONOME ou AUTONOME+"
+                                        type="radio"
+                                        name="nouvelleCompetenceNiveau"
+                                        value={level}
+                                        checked={nouveauNiveau === level}
+                                        onChange={() => setNouveauNiveau(level)}
+                                        className="form-radio"
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={ajouterCompetence}
-                                        disabled={nouvelleCompetence.trim() === ""}
-                                        className="bg-blue-500 text-white px-4 rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300"
-                                    >
-                                        Ajouter
-                                    </button>
-                                </div>
+                                </td>
+                            ))}
+                        </tr>
+                        <tr>
+                            <td colSpan="5" className="px-4 py-2 border border-gray-300">
+                                <button
+                                    type="button"
+                                    onClick={ajouterCompetence}
+                                    disabled={nouvelleCompetence.trim() === ""}
+                                    className="bg-blue-500 text-white w-full py-2 rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300"
+                                >
+                                    Ajouter
+                                </button>
                             </td>
                         </tr>
+
                         </tbody>
                     </table>
+                    <div className="flex justify-between mb-4">
+                        <span>Note globale compétences métier</span>
+                        <input
+                            type="number"
+                            value={noteMetier}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === "" || (Number(value) >= 0 && Number(value) <= 20)) {
+                                    setNoteMetier(value);
+                                }
+                            }}
+                            className="w-20 px-4 py-2 border border-gray-300 rounded-lg text-center"
+                            min="0"
+                            max="20"
+                        />
+                    </div>
 
                         <div className="text-center mt-6">
                             <button
@@ -759,6 +799,36 @@ export default function EvaluationForm() {
                     </div>
                 </div>
 
+            {/* Modal de succès */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+                        <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-t-xl">
+                            <div className="flex justify-center mb-2">
+                                <div className="bg-white rounded-full p-2 inline-flex">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-bold text-white text-center">Succès !</h3>
+                        </div>
+
+                        <div className="p-6">
+                            <p className="text-gray-700 text-center mb-6">Évaluation envoyée avec succès!</p>
+
+                            <div className="flex justify-center">
+                                <button
+                                    onClick={closeSuccessModal}
+                                    className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                                >
+                                    Fermer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             </div>
 
         );
