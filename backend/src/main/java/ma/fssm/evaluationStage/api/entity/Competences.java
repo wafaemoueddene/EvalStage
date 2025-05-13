@@ -42,10 +42,7 @@ public class Competences {
     public Competences() {
     }
 
-    // Supprimé la référence circulaire
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "categorie_id")
-    // private Categorie categorie;
+
 
     // Méthode pour ajouter une catégorie en établissant la relation bidirectionnelle
     public void addCategorie(Categorie categorie) {
