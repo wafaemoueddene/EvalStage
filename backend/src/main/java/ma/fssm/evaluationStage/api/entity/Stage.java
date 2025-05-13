@@ -36,6 +36,4 @@ public class Stage {
             inverseJoinColumns = @JoinColumn(name = "periode_id")
     )
     private Collection<Periode> periodes;
-
-
 }

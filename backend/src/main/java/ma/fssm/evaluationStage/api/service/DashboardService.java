@@ -1,39 +1,52 @@
 package ma.fssm.evaluationStage.api.service;
 
+import lombok.RequiredArgsConstructor;
 import ma.fssm.evaluationStage.api.dto.dashboard.*;
 import ma.fssm.evaluationStage.api.entity.*;
 import ma.fssm.evaluationStage.api.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.sql.Date;
-import java.util.*;
+import java.util.Set;
+import java.util.Comparator;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.HashSet;
 
+
+@RequiredArgsConstructor
 @Service
 public class DashboardService {
 
-    @Autowired
-    private EvaluationRepository evaluationRepository;
 
-    @Autowired
-    private StagiaireRepository stagiaireRepository;
+    private static final Logger logger = Logger.getLogger(DashboardService.class.getName());
 
-    @Autowired
-    private TuteurRepository tuteurRepository;
+    private  final  EvaluationRepository evaluationRepository;
 
-    @Autowired
-    private CompetencesRepository competencesRepository;
 
-    @Autowired
-    private StageRepository stageRepository;
+    private  final StagiaireRepository stagiaireRepository;
 
-    @Autowired
-    private AppreciationRepository appreciationRepository;
 
-    @Autowired
-    private PeriodeRepository periodeRepository;
+    private final  TuteurRepository tuteurRepository;
+
+
+    private final  CompetencesRepository competencesRepository;
+
+
+    private final  StageRepository stageRepository;
+
+
+    private  final AppreciationRepository appreciationRepository;
+
+
+    private  final PeriodeRepository periodeRepository;
 
 
     @Transactional(readOnly = true)
@@ -53,15 +66,7 @@ public class DashboardService {
 
     @Transactional(readOnly = true)
     public List<EvaluationStatsDTO> getEvaluationStats() {
-        List<Evaluation> evaluations = evaluationRepository.findAll();
-        Map<String, Integer> evaluationCount = new HashMap<>();
-
-        for (Evaluation evaluation : evaluations) {
-            String categorie = evaluation.getCategorie();
-            if (categorie != null && !categorie.isEmpty()) {
-                evaluationCount.put(categorie, evaluationCount.getOrDefault(categorie, 0) + 1);
-            }
-        }
+        Map<String, Integer> evaluationCount = getEvaluationCategoriesStats();  // Réutilisation de la méthode existante
 
         List<EvaluationStatsDTO> result = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : evaluationCount.entrySet()) {
@@ -77,9 +82,9 @@ public class DashboardService {
 
     @Transactional(readOnly = true)
     public DashboardStatsDTO getDashboardStats() {
-        System.out.println("Fetching dashboard stats...");
+        logger.info("Fetching dashboard stats...");
         long totalEvaluations = evaluationRepository.count();
-        System.out.println("Total Evaluations: " + totalEvaluations);
+        logger.info("Total Evaluations: " + totalEvaluations);
 
         // Compter le nombre d'évaluations avec des notes > 0 directement en base de données
         long completedEvaluations = appreciationRepository.findAll().stream()

@@ -1,20 +1,18 @@
 package ma.fssm.evaluationStage.api.dto.dashboard;
 
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 public class CategorieStatsDTO {
     private String categorie;
     private String valeur;
     private int count;
 
-    public CategorieStatsDTO() {
-    }
-
-    public CategorieStatsDTO(String categorie, String valeur, int count) {
-        this.categorie = categorie;
-        this.valeur = valeur;
-        this.count = count;
-    }
 
     public String getCategorie() {
         return categorie;
