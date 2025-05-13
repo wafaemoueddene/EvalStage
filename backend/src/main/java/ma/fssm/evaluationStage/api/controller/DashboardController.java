@@ -1,23 +1,22 @@
 package ma.fssm.evaluationStage.api.controller;
 
+import lombok.RequiredArgsConstructor;
 import ma.fssm.evaluationStage.api.dto.dashboard.*;
 import ma.fssm.evaluationStage.api.service.DashboardService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
+
+@RequiredArgsConstructor
 @RestController
-@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"},
-        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS},
-        allowedHeaders = "*")
 @RequestMapping("/api/admin/dashboard")
 public class DashboardController {
 
-    @Autowired
-    private DashboardService dashboardService;
+        private final DashboardService dashboardService;
+
 
     @GetMapping("/stats")
     public ResponseEntity<DashboardStatsDTO> getDashboardStats() {
@@ -64,8 +63,5 @@ public class DashboardController {
         List<CompetenceCategoryValueDTO> values = dashboardService.getCompetenceCategoryValues();
         return ResponseEntity.ok(values);
     }
-
-
-
 
 }
