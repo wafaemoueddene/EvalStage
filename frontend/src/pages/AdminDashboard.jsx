@@ -12,7 +12,8 @@ import {
     Cell
 } from 'recharts';
 import {
-    Users, Briefcase, UserCheck, AlertTriangle, RefreshCw
+    Users, Briefcase, UserCheck, AlertTriangle, RefreshCw, Home, BarChart3, FileText,
+    Settings, LogOut, Menu, ChevronRight, ChevronLeft, Award, CalendarRange, Building
 } from 'lucide-react';
 
 // Fonction pour formater les dates
@@ -22,8 +23,82 @@ const formatDate = (dateString) => {
     return date.toLocaleDateString('fr-FR');
 };
 
+// Composant Sidebar
+const Sidebar = ({ isOpen, toggleSidebar }) => {
+    const menuItems = [
+        { icon: <Home size={20} />, label: 'Tableau de bord', active: true },
+    ];
+
+    return (
+        <>
+            {/* Overlay pour mobile (apparaît seulement quand sidebar est ouverte sur mobile) */}
+            <div
+                className={`fixed inset-0 bg-black bg-opacity-50 z-20 transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                onClick={toggleSidebar}
+            />
+
+            {/* Sidebar */}
+            <div
+                className={`fixed top-0 left-0 h-full bg-indigo-900 text-white transition-all duration-300 ease-in-out z-30
+                           ${isOpen ? 'w-64' : 'w-0 md:w-16'} overflow-hidden`}
+            >
+                {/* Logo/Entête */}
+                <div className="flex items-center justify-between p-4 border-b border-indigo-800">
+                    <div className={`flex items-center ${!isOpen && 'md:justify-center w-full'}`}>
+                        <div className="bg-white p-1 rounded">
+                            <span className="text-indigo-900 font-bold text-lg">AD</span>
+                        </div>
+                        <span className={`ml-2 font-semibold text-lg ${!isOpen && 'md:hidden'}`}>Admin </span>
+                    </div>
+                    <button
+                        onClick={toggleSidebar}
+                        className={`text-white hover:text-indigo-200 ${!isOpen && 'md:hidden'}`}
+                    >
+                        {isOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+                    </button>
+                </div>
+
+                {/* Menu Items */}
+                <nav className="mt-6">
+                    <ul>
+                        {menuItems.map((item, index) => (
+                            <li key={index}>
+                                <a
+                                    href="#"
+                                    className={`flex items-center py-3 px-4 hover:bg-indigo-800 transition-colors
+                                               ${item.active ? ' border-l-4 border-white' : ''} 
+                                               ${!isOpen && 'md:justify-center'}`}
+                                >
+                                    <span className={`${item.active ? 'text-white' : 'text-indigo-300'}`}>
+                                        {item.icon}
+                                    </span>
+                                    <span className={`ml-3 ${!isOpen && 'md:hidden'} ${item.active ? 'font-medium' : ''}`}>
+                                        {item.label}
+                                    </span>
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+
+                {/* User Section at bottom */}
+                <div className={`absolute bottom-0 left-0 right-0 p-4 border-t border-indigo-800 
+                                 ${!isOpen && 'md:flex md:justify-center'}`}>
+                    <a href="#" className="flex items-center text-indigo-300 hover:text-white transition-colors">
+                        <LogOut size={20} />
+                        <span className={`ml-2 ${!isOpen && 'md:hidden'}`}>Déconnexion</span>
+                    </a>
+                </div>
+            </div>
+        </>
+    );
+};
+
 // Composant principal du tableau de bord administrateur
 const AdminDashboard = () => {
+    // État pour contrôler la sidebar
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+
     // États pour stocker les différentes données du tableau de bord
     const [stats, setStats] = useState({
         totalStagiaires: 0,
@@ -45,6 +120,11 @@ const AdminDashboard = () => {
     const [evaluationCategorieDetails, setEvaluationCategorieDetails] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    // Fonction pour alterner l'état de la sidebar
+    const toggleSidebar = () => {
+        setSidebarOpen(!sidebarOpen);
+    };
 
     // Couleurs pour les graphiques
     const COLORS = ['#4f46e5', '#8884d8', '#9333ea', '#6366f1', '#4338ca'];
@@ -237,184 +317,204 @@ const AdminDashboard = () => {
     // Rendu en cas d'erreur
     if (error && !loading) {
         return (
-            <div className="p-6 bg-gray-50 min-h-screen">
-                <ErrorDisplay />
+            <div className="flex h-screen bg-gray-100">
+                <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+                <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0 md:ml-16'}`}>
+                    <div className="p-6">
+                        <ErrorDisplay />
+                    </div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
-            {/* En-tête du tableau de bord */}
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-800">
-                    Tableau de Bord Administratif
-                </h1>
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={handleRefresh}
-                        disabled={loading}
-                        className={`px-3 py-2 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition-colors flex items-center ${
-                            loading ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
-                    >
+        <div className="flex h-screen bg-gray-100">
+            <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+
+            {/* Main Content */}
+            <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0 md:ml-16'}`}>
+                <div className="p-6">
+                    {/* En-tête du tableau de bord */}
+                    <div className="mb-6 flex items-center justify-between">
+                        <div className="flex items-center">
+                            <button
+                                onClick={toggleSidebar}
+                                className="md:hidden mr-4 p-2 rounded-md hover:bg-gray-200"
+                            >
+                                <Menu size={20} />
+                            </button>
+                            <h1 className="text-2xl font-bold text-gray-800">
+                                Tableau de Bord Administratif
+                            </h1>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={handleRefresh}
+                                disabled={loading}
+                                className={`px-3 py-2 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition-colors flex items-center ${
+                                    loading ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                            >
+                                {loading ? (
+                                    <>
+                                        <div className="animate-spin h-4 w-4 border-2 border-indigo-600 border-t-transparent rounded-full mr-2" />
+                                        Chargement...
+                                    </>
+                                ) : (
+                                    <>
+                                        <RefreshCw className="h-4 w-4 mr-1" />
+                                        Actualiser
+                                    </>
+                                )}
+                            </button>
+                            <div className="bg-white shadow rounded-lg px-3 py-2 flex items-center text-sm">
+                                <span className="font-medium text-gray-600">Date:</span>
+                                <span className="ml-2 text-gray-800">{new Date().toLocaleDateString('fr-FR')}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Statistiques complémentaires */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <StatCard
+                            title="Stagiaires"
+                            value={stats.totalStagiaires}
+                            icon={<Users className="text-indigo-600" size={20} />}
+                            color="indigo"
+                        />
+                        <StatCard
+                            title="Tuteurs"
+                            value={stats.totalTuteurs}
+                            icon={<UserCheck className="text-indigo-600" size={20} />}
+                            color="indigo"
+                        />
+                        <StatCard
+                            title="Entreprises"
+                            value={stats.totalEntreprises}
+                            icon={<Briefcase className="text-indigo-600" size={20} />}
+                            color="indigo"
+                        />
+                    </div>
+
+                    {/* Graphiques en deux colonnes */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        {/* Graphique des catégories d'évaluation */}
+                        <div className="bg-white rounded-lg shadow p-4">
+                            <h2 className="text-lg font-medium text-gray-800 mb-4">Répartition par Catégorie d'Évaluation</h2>
+                            {loading ? (
+                                <div className="flex justify-center items-center h-64">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+                                </div>
+                            ) : Object.keys(evaluationCategoriesData).length > 0 ? (
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart data={Object.entries(evaluationCategoriesData).map(([name, value]) => ({ name, value }))}>
+                                        <XAxis dataKey="name" />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="value" fill="#4f46e5" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="flex justify-center items-center h-64 text-gray-500">
+                                    Aucune donnée d'évaluation disponible
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Graphique des catégories de compétences */}
+                        <div className="bg-white rounded-lg shadow p-4">
+                            <h2 className="text-lg font-medium text-gray-800 mb-4">Moyenne des Compétences par Catégorie</h2>
+                            {loading ? (
+                                <div className="flex justify-center items-center h-64">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+                                </div>
+                            ) : competencesData && competencesData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <PieChart>
+                                        <Pie
+                                            data={competencesData}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            outerRadius={80}
+                                            fill="#8884d8"
+                                            dataKey="value"
+                                            label={({name, value}) => `${name}: ${value.toFixed(1)}`}
+                                        >
+                                            {competencesData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip formatter={(value) => value.toFixed(1)} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="flex justify-center items-center h-64 text-gray-500">
+                                    Aucune donnée de compétence disponible
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Tableau des stages avec informations détaillées */}
+                    <div className="bg-white rounded-lg shadow p-4 mb-6">
+                        <h2 className="text-lg font-medium text-gray-800 mb-4">Détails des Stages</h2>
                         {loading ? (
-                            <>
-                                <div className="animate-spin h-4 w-4 border-2 border-indigo-600 border-t-transparent rounded-full mr-2" />
-                                Chargement...
-                            </>
-                        ) : (
-                            <>
-                                <RefreshCw className="h-4 w-4 mr-1" />
-                                Actualiser
-                            </>
-                        )}
-                    </button>
-                    <div className="bg-white shadow rounded-lg px-3 py-2 flex items-center text-sm">
-                        <span className="font-medium text-gray-600">Date:</span>
-                        <span className="ml-2 text-gray-800">{new Date().toLocaleDateString('fr-FR')}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Statistiques complémentaires */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <StatCard
-                    title="Stagiaires"
-                    value={stats.totalStagiaires}
-                    icon={<Users className="text-indigo-600" size={20} />}
-                    color="indigo"
-                />
-                <StatCard
-                    title="Tuteurs"
-                    value={stats.totalTuteurs}
-                    icon={<UserCheck className="text-indigo-600" size={20} />}
-                    color="indigo"
-                />
-                <StatCard
-                    title="Entreprises"
-                    value={stats.totalEntreprises}
-                    icon={<Briefcase className="text-indigo-600" size={20} />}
-                    color="indigo"
-                />
-            </div>
-
-            {/* Graphiques en deux colonnes */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                {/* Graphique des catégories d'évaluation */}
-                <div className="bg-white rounded-lg shadow p-4">
-                    <h2 className="text-lg font-medium text-gray-800 mb-4">Répartition par Catégorie d'Évaluation</h2>
-                    {loading ? (
-                        <div className="flex justify-center items-center h-64">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-                        </div>
-                    ) : Object.keys(evaluationCategoriesData).length > 0 ? (
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={Object.entries(evaluationCategoriesData).map(([name, value]) => ({ name, value }))}>
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                <Bar dataKey="value" fill="#4f46e5" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    ) : (
-                        <div className="flex justify-center items-center h-64 text-gray-500">
-                            Aucune donnée d'évaluation disponible
-                        </div>
-                    )}
-                </div>
-
-                {/* Graphique des catégories de compétences */}
-                <div className="bg-white rounded-lg shadow p-4">
-                    <h2 className="text-lg font-medium text-gray-800 mb-4">Moyenne des Compétences par Catégorie</h2>
-                    {loading ? (
-                        <div className="flex justify-center items-center h-64">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-                        </div>
-                    ) : competencesData && competencesData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={300}>
-                            <PieChart>
-                                <Pie
-                                    data={competencesData}
-                                    cx="50%"
-                                    cy="50%"
-                                    labelLine={false}
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    dataKey="value"
-                                    label={({name, value}) => `${name}: ${value.toFixed(1)}`}
-                                >
-                                    {competencesData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            <div className="flex justify-center items-center h-64">
+                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+                            </div>
+                        ) : stagesData && stagesData.length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full table-auto border-collapse">
+                                    <thead>
+                                    <tr className="bg-blue-100">
+                                        <th className="px-4 py-2 text-left border border-gray-300">Entreprise</th>
+                                        <th className="px-4 py-2 text-left border border-gray-300">Objectif</th>
+                                        <th className="px-4 py-2 text-left border border-gray-300">Description</th>
+                                        <th className="px-4 py-2 text-left border border-gray-300">Stagiaire</th>
+                                        <th className="px-4 py-2 text-left border border-gray-300">Email Stagiaire</th>
+                                        <th className="px-4 py-2 text-left border border-gray-300">Tuteur</th>
+                                        <th className="px-4 py-2 text-left border border-gray-300">Email Tuteur</th>
+                                        <th className="px-4 py-2 text-left border border-gray-300">Période</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {stagesData.map((stage, index) => (
+                                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}>
+                                            <td className="px-4 py-2 border border-gray-300">{stage.entreprise || 'N/A'}</td>
+                                            <td className="px-4 py-2 border border-gray-300">{stage.objectif || 'N/A'}</td>
+                                            <td className="px-4 py-2 border border-gray-300">{stage.description || 'N/A'}</td>
+                                            <td className="px-4 py-2 border border-gray-300">
+                                                {stage.stagiaireNom && stage.stagiairePrenom
+                                                    ? `${stage.stagiaireNom} ${stage.stagiairePrenom}`
+                                                    : 'N/A'}
+                                            </td>
+                                            <td className="px-4 py-2 border border-gray-300">{stage.stagiaireEmail || 'N/A'}</td>
+                                            <td className="px-4 py-2 border border-gray-300">
+                                                {stage.tuteurNom && stage.tuteurPrenom
+                                                    ? `${stage.tuteurNom} ${stage.tuteurPrenom}`
+                                                    : 'N/A'}
+                                            </td>
+                                            <td className="px-4 py-2 border border-gray-300">{stage.tuteurEmail || 'N/A'}</td>
+                                            <td className="px-4 py-2 border border-gray-300">
+                                                {stage.dateDebut && stage.dateFin
+                                                    ? `${formatDate(stage.dateDebut)} - ${formatDate(stage.dateFin)}`
+                                                    : 'N/A'}
+                                            </td>
+                                        </tr>
                                     ))}
-                                </Pie>
-                                <Tooltip formatter={(value) => value.toFixed(1)} />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    ) : (
-                        <div className="flex justify-center items-center h-64 text-gray-500">
-                            Aucune donnée de compétence disponible
-                        </div>
-                    )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="flex justify-center items-center h-64 text-gray-500">
+                                Aucune donnée de stage disponible
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
-
-            {/* Tableau des stages avec informations détaillées */}
-            <div className="bg-white rounded-lg shadow p-4 mb-6">
-                <h2 className="text-lg font-medium text-gray-800 mb-4">Détails des Stages</h2>
-                {loading ? (
-                    <div className="flex justify-center items-center h-64">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-                    </div>
-                ) : stagesData && stagesData.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full table-auto border-collapse">
-                            <thead>
-                            <tr className="bg-blue-100">
-                                <th className="px-4 py-2 text-left border border-gray-300">Entreprise</th>
-                                <th className="px-4 py-2 text-left border border-gray-300">Objectif</th>
-                                <th className="px-4 py-2 text-left border border-gray-300">Description</th>
-                                <th className="px-4 py-2 text-left border border-gray-300">Stagiaire</th>
-                                <th className="px-4 py-2 text-left border border-gray-300">Email Stagiaire</th>
-                                <th className="px-4 py-2 text-left border border-gray-300">Tuteur</th>
-                                <th className="px-4 py-2 text-left border border-gray-300">Email Tuteur</th>
-                                <th className="px-4 py-2 text-left border border-gray-300">Période</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {stagesData.map((stage, index) => (
-                                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}>
-                                    <td className="px-4 py-2 border border-gray-300">{stage.entreprise || 'N/A'}</td>
-                                    <td className="px-4 py-2 border border-gray-300">{stage.objectif || 'N/A'}</td>
-                                    <td className="px-4 py-2 border border-gray-300">{stage.description || 'N/A'}</td>
-                                    <td className="px-4 py-2 border border-gray-300">
-                                        {stage.stagiaireNom && stage.stagiairePrenom
-                                            ? `${stage.stagiaireNom} ${stage.stagiairePrenom}`
-                                            : 'N/A'}
-                                    </td>
-                                    <td className="px-4 py-2 border border-gray-300">{stage.stagiaireEmail || 'N/A'}</td>
-                                    <td className="px-4 py-2 border border-gray-300">
-                                        {stage.tuteurNom && stage.tuteurPrenom
-                                            ? `${stage.tuteurNom} ${stage.tuteurPrenom}`
-                                            : 'N/A'}
-                                    </td>
-                                    <td className="px-4 py-2 border border-gray-300">{stage.tuteurEmail || 'N/A'}</td>
-                                    <td className="px-4 py-2 border border-gray-300">
-                                        {stage.dateDebut && stage.dateFin
-                                            ? `${formatDate(stage.dateDebut)} - ${formatDate(stage.dateFin)}`
-                                            : 'N/A'}
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <div className="flex justify-center items-center h-64 text-gray-500">
-                        Aucune donnée de stage disponible
-                    </div>
-                )}
             </div>
         </div>
     );
